@@ -58,7 +58,11 @@
 			{
 				"name": "lazylimit",
 				"type": "ratelimit",
-				"namespace_id": "66669"
+				"namespace_id": "66669",
+				"simple": {
+					"requests": 100,
+					"window": 60
+				}
 			}
 		]
 	}
