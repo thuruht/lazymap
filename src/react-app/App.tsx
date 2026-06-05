@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { MapContainer, TileLayer, Marker, useMap, Polyline } from "react-leaflet";
+import { useState, useEffect, useRef } from "react";
+import { MapContainer, TileLayer, Marker, useMap, Polyline, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import "./App.css";
@@ -30,14 +30,104 @@ function MapUpdater({ center, route }: { center: [number, number], route: [numbe
   return null;
 }
 
+interface RouteDirection {
+  instruction: string;
+  name: string;
+  distance: number;
+}
+
+interface SponsoredStop {
+  type: string;
+  name: string;
+  position: [number, number];
+  link: string;
+}
+
+interface RouteData {
+  route: [number, number][];
+  lazyScore: number;
+  turnCount: number;
+  distance: number;
+  duration: number;
+  directions: RouteDirection[];
+  sponsoredStops: SponsoredStop[];
+  narrative: string;
+  mode: string;
+}
+
+const AdBanner4x1 = () => {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (ref.current) {
+      const script = document.createElement("script");
+      script.async = true;
+      script.dataset.cfasync = "false";
+      script.src = "https://pl29649217.effectivecpmnetwork.com/16ec00aafb5a287a676e848be9bca123/invoke.js";
+      ref.current.appendChild(script);
+    }
+  }, []);
+  return <div ref={ref} id="container-16ec00aafb5a287a676e848be9bca123" className="sponsored-tag"></div>;
+};
+
+const AdBanner160x300 = () => {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (ref.current) {
+      const scriptConfig = document.createElement("script");
+      scriptConfig.innerHTML = `
+        atOptions = {
+          'key' : '3307bd28ad7d8b2710e1da6b875192c1',
+          'format' : 'iframe',
+          'height' : 300,
+          'width' : 160,
+          'params' : {}
+        };`;
+      const scriptSrc = document.createElement("script");
+      scriptSrc.src = "https://www.highperformanceformat.com/3307bd28ad7d8b2710e1da6b875192c1/invoke.js";
+      ref.current.appendChild(scriptConfig);
+      ref.current.appendChild(scriptSrc);
+    }
+  }, []);
+  return <div ref={ref} className="ad-160x300 sponsored-tag"></div>;
+};
+
+const AdBanner300x250 = () => {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (ref.current) {
+      const scriptConfig = document.createElement("script");
+      scriptConfig.innerHTML = `
+        atOptions = {
+          'key' : '8ced9507792f54b04782805656dcb8a7',
+          'format' : 'iframe',
+          'height' : 250,
+          'width' : 300,
+          'params' : {}
+        };`;
+      const scriptSrc = document.createElement("script");
+      scriptSrc.src = "https://www.highperformanceformat.com/8ced9507792f54b04782805656dcb8a7/invoke.js";
+      ref.current.appendChild(scriptConfig);
+      ref.current.appendChild(scriptSrc);
+    }
+  }, []);
+  return <div ref={ref} className="ad-300x250 sponsored-tag"></div>;
+};
+
 function App() {
   const [startQuery, setStartQuery] = useState("");
   const [endQuery, setEndQuery] = useState("");
-  const [route, setRoute] = useState<[number, number][]>([]);
-  const [mapCenter] = useState<[number, number]>([39.8283, -98.5795]); // Center of US
-  const [lazyScore, setLazyScore] = useState<number | null>(null);
-  const [narrative, setNarrative] = useState("");
+  const [mode, setMode] = useState("driving");
+  const [routeData, setRouteData] = useState<RouteData | null>(null);
+  const [mapCenter] = useState<[number, number]>([39.8283, -98.5795]);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition((position) => {
+        setStartQuery(`${position.coords.latitude}, ${position.coords.longitude}`);
+      });
+    }
+  }, []);
 
   const handleSearch = async () => {
     if (!startQuery || !endQuery) return;
@@ -46,13 +136,11 @@ function App() {
       const response = await fetch("/api/route", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ start: startQuery, end: endQuery })
+        body: JSON.stringify({ start: startQuery, end: endQuery, mode })
       });
       const data = await response.json();
       if (data.route) {
-        setRoute(data.route);
-        setLazyScore(data.score);
-        setNarrative(data.narrative);
+        setRouteData(data);
       }
     } catch (e) {
       console.error("Search error", e);
@@ -68,20 +156,17 @@ function App() {
       const response = await fetch(`/api/search?q=${encodeURIComponent(endQuery)}`);
       const data = await response.json();
       if (data.results && data.results.length > 0) {
-        setEndQuery(data.results[0].name || "Somewhere Lazy");
-        // Trigger normal search with the new destination
-        // Note: setting state is async, so we use the value directly
-        const start = startQuery || "My current blues";
+        const destination = data.results[0].name || "Somewhere Lazy";
+        setEndQuery(destination);
+        const start = startQuery || "My current location";
         const res2 = await fetch("/api/route", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ start, end: data.results[0].name || data.results[0].id })
+          body: JSON.stringify({ start, end: destination, mode })
         });
         const data2 = await res2.json();
         if (data2.route) {
-          setRoute(data2.route);
-          setLazyScore(data2.score);
-          setNarrative(data2.narrative);
+          setRouteData(data2);
         }
       }
     } catch (e) {
@@ -93,27 +178,43 @@ function App() {
 
   return (
     <div className="app-container dark-americana">
+      <div className="top-ad-bar">
+        <AdBanner4x1 />
+      </div>
+
       <header>
         <h1>lazymap.us</h1>
-        <p className="subtitle">The Bluesy Way There.</p>
       </header>
 
-      <div className="search-panel">
-        <input
-          type="text"
-          placeholder="Where are you stuck?"
-          value={startQuery}
-          onChange={(e) => setStartQuery(e.target.value)}
-        />
-        <input
-          type="text"
-          placeholder="Where do you want to be lazy?"
-          value={endQuery}
-          onChange={(e) => setEndQuery(e.target.value)}
-        />
+      <div className="search-panel glass">
+        <div className="mode-selector">
+          {["driving", "walking", "biking", "transit"].map((m) => (
+            <button
+              key={m}
+              className={mode === m ? "active" : ""}
+              onClick={() => setMode(m)}
+            >
+              {m.charAt(0).toUpperCase() + m.slice(1)}
+            </button>
+          ))}
+        </div>
+        <div className="input-group">
+          <input
+            type="text"
+            placeholder="Starting point..."
+            value={startQuery}
+            onChange={(e) => setStartQuery(e.target.value)}
+          />
+          <input
+            type="text"
+            placeholder="Where to?"
+            value={endQuery}
+            onChange={(e) => setEndQuery(e.target.value)}
+          />
+        </div>
         <div className="button-group">
           <button onClick={handleSearch} disabled={loading} className="main-search">
-            {loading ? "Searching..." : "Find the Lazy Way"}
+            {loading ? "Cruising..." : "Find the Lazy Way"}
           </button>
           <button onClick={handleSemanticSearch} disabled={loading} className="lazy-search">
             ✨ I'm feeling lazy
@@ -121,37 +222,92 @@ function App() {
         </div>
       </div>
 
-      <div className="main-content">
-        <div className="map-wrapper">
-          <MapContainer center={mapCenter} zoom={4} scrollWheelZoom={true} style={{ height: "100%", width: "100%" }}>
-            <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-              url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-            />
-            <MapUpdater center={mapCenter} route={route} />
-            {route.length > 0 && (
-              <>
-                <Polyline positions={route} color="#3498db" weight={5} opacity={0.7} />
-                <Marker position={route[0]} />
-                <Marker position={route[route.length - 1]} />
-              </>
-            )}
-          </MapContainer>
+      <div className="main-layout">
+        <div className="content-left">
+          <div className="map-wrapper glass">
+            <MapContainer center={mapCenter} zoom={4} scrollWheelZoom={true} style={{ height: "100%", width: "100%" }}>
+              <TileLayer
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+                url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+              />
+              <MapUpdater center={mapCenter} route={routeData?.route || []} />
+              {routeData && (
+                <>
+                  <Polyline positions={routeData.route} color="#3498db" weight={5} opacity={0.7} />
+                  <Marker position={routeData.route[0]} />
+                  <Marker position={routeData.route[routeData.route.length - 1]} />
+                  {routeData.sponsoredStops.map((stop, i) => (
+                    <Marker key={i} position={stop.position}>
+                      <Popup>
+                        <div className="sponsored-popup">
+                          <strong>{stop.name}</strong>
+                          <p>Need a lazy break?</p>
+                          <a href={stop.link} target="_blank" rel="noreferrer">Visit →</a>
+                        </div>
+                      </Popup>
+                    </Marker>
+                  ))}
+                </>
+              )}
+            </MapContainer>
+          </div>
+
+          {routeData && (
+            <div className="info-panel glass">
+              <div className="stats-grid">
+                <div className="stat-card">
+                  <span className="stat-label">Lazy Score</span>
+                  <div className="meter-bar">
+                    <div className="meter-fill" style={{ width: `${routeData.lazyScore}%` }}></div>
+                  </div>
+                  <span className="stat-value">{routeData.lazyScore}%</span>
+                </div>
+                <div className="stat-card">
+                  <span className="stat-label">Turns</span>
+                  <span className="stat-value">{routeData.turnCount}</span>
+                </div>
+                <div className="stat-card">
+                  <span className="stat-label">Distance</span>
+                  <span className="stat-value">{routeData.distance} mi</span>
+                </div>
+                <div className="stat-card">
+                  <span className="stat-label">Duration</span>
+                  <span className="stat-value">{routeData.duration} min</span>
+                </div>
+              </div>
+
+              <div className="narrative">
+                <p>"{routeData.narrative}"</p>
+              </div>
+
+              <div className="lazy-ad-banner glass">
+                <p>The Ultimate Shortcut</p>
+                <a href="https://www.effectivecpmnetwork.com/xqswie92h2?key=1073ee6ec1c94b2b99bd7830cbed5778" target="_blank" rel="noreferrer">Skip the effort →</a>
+              </div>
+
+              <div className="directions-panel">
+                <h3>Lazy Directions</h3>
+                <ul className="directions-list">
+                  {routeData.directions.map((dir, i) => (
+                    <li key={i} className="direction-item">
+                      <span className="instruction">{dir.instruction}</span>
+                      {dir.name && <span className="road-name"> onto {dir.name}</span>}
+                      <span className="distance"> ({Math.round(dir.distance / 160.9) / 10} mi)</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <AdBanner300x250 />
+            </div>
+          )}
         </div>
 
-        {lazyScore !== null && (
-          <div className="info-panel">
-            <div className="lazy-meter">
-              <h3>Lazy Score: {lazyScore}%</h3>
-              <div className="meter-bar">
-                <div className="meter-fill" style={{ width: `${lazyScore}%` }}></div>
-              </div>
-            </div>
-            <div className="narrative">
-              <p>"{narrative}"</p>
-            </div>
-          </div>
-        )}
+        <div className="content-right discovery">
+          <div className="discovery-header">Discovery</div>
+          <AdBanner160x300 />
+          <div className="discovery-hint">Sponsored spots for your lazy journey.</div>
+        </div>
       </div>
 
       <div className="fireflies">
