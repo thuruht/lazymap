@@ -11,5 +11,44 @@
 	"assets": {
 		"directory": "./dist/client",
 		"not_found_handling": "single-page-application"
+	},
+	"d1_databases": [
+		{
+			"binding": "lazymap",
+			"database_id": "lazymap"
+		}
+	],
+	"r2_buckets": [
+		{
+			"binding": "justlazy",
+			"bucket_name": "lazybucket"
+		},
+		{
+			"binding": "searchlazy",
+			"bucket_name": "lazysearchbuckey"
+		}
+	],
+	"ai": {
+		"binding": "lazymapbot"
+	},
+	"vectorize": [
+		{
+			"binding": "lazymaplookk",
+			"index_name": "lazymap"
+		}
+	],
+	"dispatch_namespaces": [
+		{
+			"binding": "lazydyn", "namespace": "lazydyn"
+		}
+	],
+	"unsafe": {
+		"bindings": [
+			{
+				"name": "lazylimit",
+				"type": "ratelimit",
+				"namespace_id": "66669"
+			}
+		]
 	}
 }
