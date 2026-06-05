@@ -209,3 +209,69 @@ header h1 {
   0%, 100% { opacity: 0; }
   50% { opacity: 1; }
 }
+
+.mode-selector {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.mode-selector button {
+  background: rgba(41, 50, 65, 0.5);
+  color: #98c1d9;
+  border: 1px solid var(--accent-color);
+  padding: 8px 16px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-size: 0.9rem;
+}
+
+.mode-selector button.active {
+  background: var(--accent-color);
+  color: white;
+  border-color: var(--highlight-color);
+  box-shadow: 0 0 10px var(--accent-color);
+}
+
+.lazy-ad-banner {
+  background: rgba(152, 193, 217, 0.1);
+  padding: 15px;
+  border-radius: 8px;
+  border: 1px dashed var(--highlight-color);
+  text-align: center;
+  margin: 10px 0;
+}
+
+.lazy-ad-banner p {
+  margin: 0 0 10px 0;
+  font-weight: bold;
+  color: var(--highlight-color);
+}
+
+.lazy-ad-banner a {
+  color: white;
+  background: #000;
+  padding: 8px 16px;
+  border-radius: 4px;
+  text-decoration: none;
+  font-size: 0.9rem;
+  display: inline-block;
+  transition: transform 0.2s;
+}
+
+.lazy-ad-banner a:hover {
+  transform: scale(1.05);
+}
+
+.sponsored-popup {
+  color: #000;
+  font-family: sans-serif;
+}
+
+.sponsored-popup a {
+  color: #3d5a80;
+  font-weight: bold;
+}

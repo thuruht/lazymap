@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { MapContainer, TileLayer, Marker, useMap, Polyline } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, useMap, Polyline, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import "./App.css";
@@ -36,6 +36,13 @@ interface RouteDirection {
   distance: number;
 }
 
+interface SponsoredStop {
+  type: string;
+  name: string;
+  position: [number, number];
+  link: string;
+}
+
 interface RouteData {
   route: [number, number][];
   lazyScore: number;
@@ -43,15 +50,26 @@ interface RouteData {
   distance: number;
   duration: number;
   directions: RouteDirection[];
+  sponsoredStops: SponsoredStop[];
   narrative: string;
+  mode: string;
 }
 
 function App() {
   const [startQuery, setStartQuery] = useState("");
   const [endQuery, setEndQuery] = useState("");
+  const [mode, setMode] = useState("driving");
   const [routeData, setRouteData] = useState<RouteData | null>(null);
-  const [mapCenter] = useState<[number, number]>([39.8283, -98.5795]); // Center of US
+  const [mapCenter] = useState<[number, number]>([39.8283, -98.5795]);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition((position) => {
+        setStartQuery(`${position.coords.latitude}, ${position.coords.longitude}`);
+      });
+    }
+  }, []);
 
   const handleSearch = async () => {
     if (!startQuery || !endQuery) return;
@@ -60,7 +78,7 @@ function App() {
       const response = await fetch("/api/route", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ start: startQuery, end: endQuery })
+        body: JSON.stringify({ start: startQuery, end: endQuery, mode })
       });
       const data = await response.json();
       if (data.route) {
@@ -86,7 +104,7 @@ function App() {
         const res2 = await fetch("/api/route", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ start, end: destination })
+          body: JSON.stringify({ start, end: destination, mode })
         });
         const data2 = await res2.json();
         if (data2.route) {
@@ -107,6 +125,17 @@ function App() {
       </header>
 
       <div className="search-panel">
+        <div className="mode-selector">
+          {["driving", "walking", "biking", "transit"].map((m) => (
+            <button
+              key={m}
+              className={mode === m ? "active" : ""}
+              onClick={() => setMode(m)}
+            >
+              {m.charAt(0).toUpperCase() + m.slice(1)}
+            </button>
+          ))}
+        </div>
         <div className="input-group">
           <input
             type="text"
@@ -144,6 +173,17 @@ function App() {
                 <Polyline positions={routeData.route} color="#3498db" weight={5} opacity={0.7} />
                 <Marker position={routeData.route[0]} />
                 <Marker position={routeData.route[routeData.route.length - 1]} />
+                {routeData.sponsoredStops.map((stop, i) => (
+                  <Marker key={i} position={stop.position}>
+                    <Popup>
+                      <div className="sponsored-popup">
+                        <strong>{stop.name}</strong>
+                        <p>Need a lazy break?</p>
+                        <a href={stop.link} target="_blank" rel="noreferrer">Visit →</a>
+                      </div>
+                    </Popup>
+                  </Marker>
+                ))}
               </>
             )}
           </MapContainer>
@@ -176,6 +216,13 @@ function App() {
             <div className="narrative">
               <p>"{routeData.narrative}"</p>
             </div>
+
+            {routeData.mode !== "driving" && (
+              <div className="lazy-ad-banner">
+                <p>Too tired for the lazy {routeData.mode} route?</p>
+                <a href="https://lyft.com" target="_blank" rel="noreferrer">Grab a Lyft instead →</a>
+              </div>
+            )}
 
             <div className="directions-panel">
               <h3>Directions</h3>
