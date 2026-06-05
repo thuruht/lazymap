@@ -1,45 +1,156 @@
-#root {
-	max-width: 1280px;
-	margin: 0 auto;
-	padding: 2rem;
-	text-align: center;
+:root {
+  --bg-color: #0a0a12;
+  --text-color: #d1d1e0;
+  --accent-color: #3d5a80;
+  --highlight-color: #98c1d9;
+  --danger-color: #ee6c4d;
+  --Americana-blue: #293241;
 }
 
-.logo {
-	height: 6em;
-	padding: 1.5em;
-	will-change: filter;
-	transition: filter 300ms;
-}
-.logo:hover {
-	filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-	filter: drop-shadow(0 0 2em #61dafbaa);
-}
-.logo.cloudflare:hover {
-	filter: drop-shadow(0 0 2em #f6821faa);
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  font-family: 'Courier New', Courier, monospace;
 }
 
-@keyframes logo-spin {
-	from {
-		transform: rotate(0deg);
-	}
-	to {
-		transform: rotate(360deg);
-	}
+.app-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  padding: 20px;
+  box-sizing: border-box;
+  overflow: hidden;
+  position: relative;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-	a:nth-of-type(2) .logo {
-		animation: logo-spin infinite 20s linear;
-	}
+header {
+  text-align: center;
+  margin-bottom: 20px;
 }
 
-.card {
-	padding: 2em;
+header h1 {
+  font-size: 3rem;
+  margin: 0;
+  color: var(--highlight-color);
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
 }
 
-.read-the-docs {
-	color: #888;
+.subtitle {
+  font-style: italic;
+  color: var(--accent-color);
 }
+
+.search-panel { flex-direction: column; align-items: center;
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-bottom: 20px;
+  z-index: 1000;
+}
+
+.search-panel input {
+  background: rgba(41, 50, 65, 0.8);
+  border: 1px solid var(--accent-color);
+  color: white;
+  padding: 10px;
+  border-radius: 4px;
+  width: 250px;
+}
+
+.search-panel button {
+  background: var(--accent-color);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.search-panel button:hover {
+  background: var(--highlight-color);
+}
+
+.main-content {
+  display: flex;
+  flex: 1;
+  gap: 20px;
+  min-height: 0;
+}
+
+.map-wrapper {
+  flex: 2;
+  border: 2px solid var(--Americana-blue);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 0 20px rgba(0,0,0,0.5);
+}
+
+.info-panel {
+  flex: 1;
+  background: rgba(41, 50, 65, 0.5);
+  padding: 20px;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  border: 1px solid var(--accent-color);
+}
+
+.lazy-meter {
+  text-align: center;
+}
+
+.meter-bar {
+  background: #1a1a2e;
+  height: 20px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--accent-color);
+}
+
+.meter-fill {
+  background: linear-gradient(90deg, var(--accent-color), var(--highlight-color));
+  height: 100%;
+  transition: width 1s ease-in-out;
+}
+
+.narrative {
+  font-size: 1.1rem;
+  line-height: 1.6;
+  color: #a0a0b0;
+  font-style: italic;
+}
+
+/* Fireflies */
+.firefly {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: #ffffaa;
+  border-radius: 50%;
+  box-shadow: 0 0 10px #ffffaa;
+  pointer-events: none;
+  animation: drift linear infinite, flash 3s ease-in-out infinite;
+}
+
+@keyframes drift {
+  from { transform: translate(0, 0); }
+  to { transform: translate(100px, -100px); }
+}
+
+@keyframes flash {
+  0%, 100% { opacity: 0; }
+  50% { opacity: 1; }
+}
+
+/* Add some random delays and positions via nth-child if needed, but for simplicity: */
+.firefly:nth-child(1) { top: 20%; left: 10%; animation-duration: 10s, 3s; }
+.firefly:nth-child(2) { top: 50%; left: 80%; animation-duration: 12s, 4s; }
+.firefly:nth-child(3) { top: 80%; left: 30%; animation-duration: 8s, 2.5s; }
+.firefly:nth-child(4) { top: 10%; left: 60%; animation-duration: 15s, 5s; }
+.firefly:nth-child(5) { top: 40%; left: 20%; animation-duration: 11s, 3.5s; }
+.button-group { display: flex; gap: 10px; margin-top: 10px; }
+.lazy-search { background: #5a189a !important; }
