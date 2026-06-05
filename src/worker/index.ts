@@ -94,6 +94,7 @@ app.post("/api/route", async (c) => {
 		}
 	} catch (e) {
 		console.error("AI error", e);
+        console.log("Environment:", JSON.stringify(Object.keys(c.env)));
 	}
 
 	return c.json({
