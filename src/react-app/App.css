@@ -275,3 +275,30 @@ header h1 {
   color: #3d5a80;
   font-weight: bold;
 }
+
+.side-ads {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+@media (max-width: 1100px) {
+  .side-ads {
+    display: none;
+  }
+}
+
+.ad-160x300, .ad-300x250 {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--Americana-blue);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+#container-16ec00aafb5a287a676e848be9bca123 {
+  width: 100%;
+  max-width: 600px;
+  margin-top: 10px;
+}

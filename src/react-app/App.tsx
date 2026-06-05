@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { MapContainer, TileLayer, Marker, useMap, Polyline, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
@@ -54,6 +54,65 @@ interface RouteData {
   narrative: string;
   mode: string;
 }
+
+// Ad components
+const AdBanner4x1 = () => {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (ref.current) {
+      const script = document.createElement("script");
+      script.async = true;
+      script.dataset.cfasync = "false";
+      script.src = "https://pl29649217.effectivecpmnetwork.com/16ec00aafb5a287a676e848be9bca123/invoke.js";
+      ref.current.appendChild(script);
+    }
+  }, []);
+  return <div ref={ref} id="container-16ec00aafb5a287a676e848be9bca123"></div>;
+};
+
+const AdBanner160x300 = () => {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (ref.current) {
+      const scriptConfig = document.createElement("script");
+      scriptConfig.innerHTML = `
+        atOptions = {
+          'key' : '3307bd28ad7d8b2710e1da6b875192c1',
+          'format' : 'iframe',
+          'height' : 300,
+          'width' : 160,
+          'params' : {}
+        };`;
+      const scriptSrc = document.createElement("script");
+      scriptSrc.src = "https://www.highperformanceformat.com/3307bd28ad7d8b2710e1da6b875192c1/invoke.js";
+      ref.current.appendChild(scriptConfig);
+      ref.current.appendChild(scriptSrc);
+    }
+  }, []);
+  return <div ref={ref} className="ad-160x300"></div>;
+};
+
+const AdBanner300x250 = () => {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (ref.current) {
+      const scriptConfig = document.createElement("script");
+      scriptConfig.innerHTML = `
+        atOptions = {
+          'key' : '8ced9507792f54b04782805656dcb8a7',
+          'format' : 'iframe',
+          'height' : 250,
+          'width' : 300,
+          'params' : {}
+        };`;
+      const scriptSrc = document.createElement("script");
+      scriptSrc.src = "https://www.highperformanceformat.com/8ced9507792f54b04782805656dcb8a7/invoke.js";
+      ref.current.appendChild(scriptConfig);
+      ref.current.appendChild(scriptSrc);
+    }
+  }, []);
+  return <div ref={ref} className="ad-300x250"></div>;
+};
 
 function App() {
   const [startQuery, setStartQuery] = useState("");
@@ -158,9 +217,14 @@ function App() {
             ✨ I'm feeling lazy
           </button>
         </div>
+        <AdBanner4x1 />
       </div>
 
       <div className="main-content">
+        <div className="side-ads">
+          <AdBanner160x300 />
+        </div>
+
         <div className="map-wrapper">
           <MapContainer center={mapCenter} zoom={4} scrollWheelZoom={true} style={{ height: "100%", width: "100%" }}>
             <TileLayer
@@ -217,12 +281,10 @@ function App() {
               <p>"{routeData.narrative}"</p>
             </div>
 
-            {routeData.mode !== "driving" && (
-              <div className="lazy-ad-banner">
-                <p>Too tired for the lazy {routeData.mode} route?</p>
-                <a href="https://lyft.com" target="_blank" rel="noreferrer">Grab a Lyft instead →</a>
-              </div>
-            )}
+            <div className="lazy-ad-banner">
+              <p>Too tired for the lazy way?</p>
+              <a href="https://www.effectivecpmnetwork.com/xqswie92h2?key=1073ee6ec1c94b2b99bd7830cbed5778" target="_blank" rel="noreferrer">The Ultimate Shortcut →</a>
+            </div>
 
             <div className="directions-panel">
               <h3>Directions</h3>
@@ -236,6 +298,8 @@ function App() {
                 ))}
               </ul>
             </div>
+
+            <AdBanner300x250 />
           </div>
         )}
       </div>
