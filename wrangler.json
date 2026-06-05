@@ -42,12 +42,25 @@
 			"binding": "lazydyn", "namespace": "lazydyn"
 		}
 	],
+	"send_email": [
+		{
+			"name": "lazymail"
+		}
+	],
+	"vars": {
+		"lazymedia": "lazymedia_placeholder",
+		"lazystream": "lazystream_placeholder"
+	},
 	"unsafe": {
 		"bindings": [
 			{
 				"name": "lazylimit",
 				"type": "ratelimit",
 				"namespace_id": "66669"
+			},
+			{
+				"name": "lazyimg",
+				"type": "images"
 			}
 		]
 	}
