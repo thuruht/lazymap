@@ -2,7 +2,7 @@
 	"$schema": "node_modules/wrangler/config-schema.json",
 	"name": "lazymap",
 	"main": "src/worker/index.ts",
-	"compatibility_date": "2024-09-23",
+	"compatibility_date": "2024-12-30",
 	"compatibility_flags": ["nodejs_compat"],
 	"observability": {
 		"enabled": true
@@ -39,7 +39,8 @@
 	],
 	"dispatch_namespaces": [
 		{
-			"binding": "lazydyn", "namespace": "lazydyn"
+			"binding": "lazydyn",
+			"namespace": "lazydyn"
 		}
 	],
 	"send_email": [
@@ -47,10 +48,6 @@
 			"name": "lazymail"
 		}
 	],
-	"vars": {
-		"lazymedia": "lazymedia_placeholder",
-		"lazystream": "lazystream_placeholder"
-	},
 	"unsafe": {
 		"bindings": [
 			{
@@ -61,6 +58,16 @@
 			{
 				"name": "lazyimg",
 				"type": "images"
+			},
+			{
+				"name": "lazymedia",
+				"type": "plain_text",
+				"text": "lazymedia"
+			},
+			{
+				"name": "lazystream",
+				"type": "plain_text",
+				"text": "lazystream"
 			}
 		]
 	}
