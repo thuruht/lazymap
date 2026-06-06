@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 
 type Bindings = {
-	laZd1: D1Database;
+	DB: D1Database;
 	laZr2: R2Bucket;
 	searchlazy: R2Bucket;
 	laZai: Ai;
