@@ -3,10 +3,10 @@ interface Env {
 	laZr2: R2Bucket;
 	searchlazy: R2Bucket;
 	laZai: Ai;
-	laZains: any; // AI Search
+	laZains: any;
 	laZkv: KVNamespace;
 	laZrl: { limit: (options: { key: string }) => Promise<{ success: boolean }> };
-	laZem: any; // Email
+	laZem: any;
 	lazydyn: DispatchNamespace;
 	ENVIRONMENT: string;
 	APP_URL: string;

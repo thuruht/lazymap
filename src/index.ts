@@ -5,7 +5,7 @@ type Bindings = {
 	laZr2: R2Bucket;
 	searchlazy: R2Bucket;
 	laZai: Ai;
-	laZains: any; // AI Search
+	laZains: any; // AI Search Namespace
 	laZkv: KVNamespace;
 	laZem: any; // Email
 	laZrl: { limit: (options: { key: string }) => Promise<{ success: boolean }> };
@@ -182,14 +182,18 @@ app.get("/api/search", async (c) => {
 	if (!query) return c.json({ results: [] });
 
 	try {
-		// Using AI Search Namespace instead of manual embeddings + Vectorize
-		const matches = await c.env.laZains.search(query, { limit: 5 });
-		if (!matches || matches.length === 0) {
+		// Using AI Search Namespace binding
+		const instance = c.env.laZains.get("default");
+		const results = await instance.search({
+			messages: [{ role: "user", content: query }]
+		});
+
+		if (!results || !results.results || results.results.length === 0) {
 			const loc = await geocode(query);
 			return c.json({ results: loc ? [loc] : [] });
 		}
 
-		return c.json({ results: matches });
+		return c.json({ results: results.results });
 	} catch (e) {
 		const loc = await geocode(query);
 		return c.json({ results: loc ? [loc] : [] });
