@@ -183,7 +183,7 @@ app.get("/api/search", async (c) => {
 
 	try {
 		// Using AI Search Namespace binding
-		const instance = c.env.laZains.get("default");
+		const instance = c.env.laZains.get("lazymap");
 		const results = await instance.search({
 			messages: [{ role: "user", content: query }]
 		});
