@@ -12,8 +12,20 @@ type Bindings = {
 
 const app = new Hono<{ Bindings: Bindings }>();
 
+// Rate limiting middleware helper
+async function checkRateLimit(c: any, key: string) {
+	if (c.env.lazylimit) {
+		const { success } = await c.env.lazylimit.limit({ key });
+		if (!success) {
+			return false;
+		}
+	}
+	return true;
+}
+
 // Helper for geocoding via Nominatim
 async function geocode(query: string) {
+	if (!query || query.trim().length === 0) return null;
 	if (query.includes(",")) {
 		const [lat, lon] = query.split(",").map(s => parseFloat(s.trim()));
 		if (!isNaN(lat) && !isNaN(lon)) {
@@ -26,7 +38,7 @@ async function geocode(query: string) {
 			headers: { "User-Agent": "lazymap.us (lazy-agent)" }
 		});
 		const data = await res.json() as any[];
-		if (data.length > 0) {
+		if (data && data.length > 0) {
 			return {
 				lat: parseFloat(data[0].lat),
 				lon: parseFloat(data[0].lon),
@@ -44,17 +56,21 @@ async function getOSRMRoute(start: [number, number], end: [number, number], mode
 	let profile = "driving";
 	if (mode === "walking") profile = "foot";
 	if (mode === "biking") profile = "bicycle";
-	// Transit is tricky with OSRM, we'll fallback to driving for the line but label it transit
+	// OSRM doesn't support transit natively in the demo instance, fallback to driving
 	const url = `https://router.project-osrm.org/route/v1/${profile}/${start[1]},${start[0]};${end[1]},${end[0]}?overview=full&geometries=geojson&steps=true`;
-	const res = await fetch(url);
-	const data = await res.json() as any;
-	return data;
+	try {
+		const res = await fetch(url);
+		const data = await res.json() as any;
+		return data;
+	} catch (e) {
+		console.error("OSRM error", e);
+		return null;
+	}
 }
 
 // Mocked Sponsored "Lazy Stops"
 function getSponsoredStops(route: [number, number][]) {
-	if (route.length < 10) return [];
-	// Just pick a few points along the route
+	if (!route || route.length < 10) return [];
 	const mid1 = route[Math.floor(route.length * 0.3)];
 	const mid2 = route[Math.floor(route.length * 0.7)];
 	return [
@@ -65,31 +81,29 @@ function getSponsoredStops(route: [number, number][]) {
 
 // Lazy Scoring Heuristic and Statistics extraction
 function extractRouteInfo(osrmData: any, mode: string) {
+	if (!osrmData || !osrmData.routes || osrmData.routes.length === 0) return null;
 	const route = osrmData.routes[0];
 	const distance = route.distance; // in meters
 	const duration = route.duration; // in seconds
 	const steps = route.legs[0].steps;
 
-	// Penalize turns
 	const turnSteps = steps.filter((s: any) => s.maneuver.type === "turn" || s.maneuver.type === "new name");
 	const turnCount = turnSteps.length;
 
-	// Bonus for long stretches
-	const highways = steps.filter((s: any) => s.name.includes("US-") || s.name.includes("I-") || s.distance > 1000);
+	const highways = steps.filter((s: any) => s.name && (s.name.includes("US-") || s.name.includes("I-") || s.distance > 1000));
 	const longStretchMiles = highways.reduce((acc: number, s: any) => acc + s.distance, 0);
 
 	const turnPenalty = turnCount * (mode === "driving" ? 500 : 100);
 	const stretchBonus = (longStretchMiles / distance) * 100;
 
-	// Score out of 100
 	let score = 100 - (turnPenalty / distance * 100) + stretchBonus;
-	if (mode === "walking") score -= 10; // Walking is inherently less lazy than driving
+	if (mode === "walking") score -= 10;
 
 	const lazyScore = Math.min(100, Math.max(0, Math.round(score)));
 
 	const directions = steps.map((s: any) => ({
 		instruction: s.maneuver.instruction,
-		name: s.name,
+		name: s.name || "Unknown Road",
 		distance: s.distance
 	}));
 
@@ -103,25 +117,31 @@ function extractRouteInfo(osrmData: any, mode: string) {
 }
 
 app.post("/api/route", async (c) => {
+	const ip = c.req.header("cf-connecting-ip") || "anonymous";
+	if (!(await checkRateLimit(c, `route-${ip}`))) {
+		return c.json({ error: "Too many requests" }, 429);
+	}
+
 	const { start, end, mode = "driving" } = await c.req.json();
 
 	const startLoc = await geocode(start);
 	const endLoc = await geocode(end);
 
 	if (!startLoc || !endLoc) {
-		return c.json({ error: "Location not found" }, 404);
+		return c.json({ error: "One or more locations could not be found." }, 404);
 	}
 
 	const osrmData = await getOSRMRoute([startLoc.lat, startLoc.lon], [endLoc.lat, endLoc.lon], mode);
-	if (!osrmData.routes || osrmData.routes.length === 0) {
-		return c.json({ error: "Route not found" }, 404);
+	if (!osrmData || !osrmData.routes || osrmData.routes.length === 0) {
+		return c.json({ error: "No route found between these locations." }, 404);
 	}
 
 	const routeCoordinates = osrmData.routes[0].geometry.coordinates.map((coord: any) => [coord[1], coord[0]]) as [number, number][];
 	const info = extractRouteInfo(osrmData, mode);
+	if (!info) return c.json({ error: "Failed to process route info" }, 500);
+
 	const sponsoredStops = getSponsoredStops(routeCoordinates);
 
-	// AI Narrative
 	let narrative = "Just keep going, don't overthink it.";
 	try {
 		const aiResponse = await c.env.lazymapbot.run("@cf/meta/llama-3.1-8b-instruct-fp8", {
@@ -147,10 +167,14 @@ app.post("/api/route", async (c) => {
 });
 
 app.get("/api/search", async (c) => {
+	const ip = c.req.header("cf-connecting-ip") || "anonymous";
+	if (!(await checkRateLimit(c, `search-${ip}`))) {
+		return c.json({ error: "Too many requests" }, 429);
+	}
+
 	const query = c.req.query("q");
 	if (!query) return c.json({ results: [] });
 
-	// Semantic Search using Workers AI + Vectorize
 	try {
 		const embeddings = await c.env.lazymapbot.run("@cf/baai/bge-small-en-v1.5", {
 			text: [query]

@@ -1,7 +1,7 @@
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
 	"name": "lazymap",
-	"main": "src/worker/index.ts",
+	"main": "./src/worker/index.ts",
 	"compatibility_date": "2026-06-05",
 	"compatibility_flags": ["nodejs_compat"],
 	"observability": {
@@ -39,8 +39,7 @@
 	],
 	"dispatch_namespaces": [
 		{
-			"binding": "lazydyn",
-			"namespace": "lazydyn"
+			"binding": "lazydyn", "namespace": "lazymap"
 		}
 	],
 	"send_email": [
@@ -50,8 +49,7 @@
 	],
 	"vars": {
 		"lazymedia": "lazymedia",
-		"lazystream": "lazystream",
-		"lazyimg": "lazyimg"
+		"lazystream": "lazystream"
 	},
 	"unsafe": {
 		"bindings": [
@@ -59,10 +57,14 @@
 				"name": "lazylimit",
 				"type": "ratelimit",
 				"namespace_id": "66669",
-				"simple": {
+				"limit": {
 					"requests": 100,
-					"window": 60
+					"window": "60s"
 				}
+			},
+			{
+				"name": "lazyimg",
+				"type": "images"
 			}
 		]
 	}

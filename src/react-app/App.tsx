@@ -26,6 +26,7 @@ function MapUpdater({ center, route }: { center: [number, number], route: [numbe
     } else {
       map.setView(center, 4);
     }
+    map.invalidateSize();
   }, [center, route, map]);
   return null;
 }
@@ -55,62 +56,43 @@ interface RouteData {
   mode: string;
 }
 
-const AdBanner4x1 = () => {
+const AdUnit = ({ type }: { id: string, type: 'native' | '160' | '300' }) => {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    if (ref.current) {
+    if (!ref.current) return;
+    const container = ref.current;
+
+    if (type === 'native') {
       const script = document.createElement("script");
       script.async = true;
       script.dataset.cfasync = "false";
       script.src = "https://pl29649217.effectivecpmnetwork.com/16ec00aafb5a287a676e848be9bca123/invoke.js";
-      ref.current.appendChild(script);
-    }
-  }, []);
-  return <div ref={ref} id="container-16ec00aafb5a287a676e848be9bca123" className="sponsored-tag"></div>;
-};
-
-const AdBanner160x300 = () => {
-  const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (ref.current) {
+      container.appendChild(script);
+    } else {
       const scriptConfig = document.createElement("script");
+      const key = type === '160' ? '3307bd28ad7d8b2710e1da6b875192c1' : '8ced9507792f54b04782805656dcb8a7';
+      const height = type === '160' ? 300 : 250;
+      const width = type === '160' ? 160 : 300;
+
       scriptConfig.innerHTML = `
         atOptions = {
-          'key' : '3307bd28ad7d8b2710e1da6b875192c1',
+          'key' : '${key}',
           'format' : 'iframe',
-          'height' : 300,
-          'width' : 160,
+          'height' : ${height},
+          'width' : ${width},
           'params' : {}
         };`;
       const scriptSrc = document.createElement("script");
-      scriptSrc.src = "https://www.highperformanceformat.com/3307bd28ad7d8b2710e1da6b875192c1/invoke.js";
-      ref.current.appendChild(scriptConfig);
-      ref.current.appendChild(scriptSrc);
+      scriptSrc.src = `https://www.highperformanceformat.com/${key}/invoke.js`;
+      container.appendChild(scriptConfig);
+      container.appendChild(scriptSrc);
     }
-  }, []);
-  return <div ref={ref} className="ad-160x300 sponsored-tag"></div>;
-};
+  }, [type]);
 
-const AdBanner300x250 = () => {
-  const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (ref.current) {
-      const scriptConfig = document.createElement("script");
-      scriptConfig.innerHTML = `
-        atOptions = {
-          'key' : '8ced9507792f54b04782805656dcb8a7',
-          'format' : 'iframe',
-          'height' : 250,
-          'width' : 300,
-          'params' : {}
-        };`;
-      const scriptSrc = document.createElement("script");
-      scriptSrc.src = "https://www.highperformanceformat.com/8ced9507792f54b04782805656dcb8a7/invoke.js";
-      ref.current.appendChild(scriptConfig);
-      ref.current.appendChild(scriptSrc);
-    }
-  }, []);
-  return <div ref={ref} className="ad-300x250 sponsored-tag"></div>;
+  if (type === 'native') {
+    return <div ref={ref} id="container-16ec00aafb5a287a676e848be9bca123" className="ad-container native"></div>;
+  }
+  return <div ref={ref} className={`ad-container ad-${type}`}></div>;
 };
 
 function App() {
@@ -120,18 +102,23 @@ function App() {
   const [routeData, setRouteData] = useState<RouteData | null>(null);
   const [mapCenter] = useState<[number, number]>([39.8283, -98.5795]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if ("geolocation" in navigator) {
-      navigator.geolocation.getCurrentPosition((position) => {
-        setStartQuery(`${position.coords.latitude}, ${position.coords.longitude}`);
-      });
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setStartQuery(`${position.coords.latitude}, ${position.coords.longitude}`);
+        },
+        () => {}
+      );
     }
   }, []);
 
   const handleSearch = async () => {
     if (!startQuery || !endQuery) return;
     setLoading(true);
+    setError(null);
     try {
       const response = await fetch("/api/route", {
         method: "POST",
@@ -139,186 +126,97 @@ function App() {
         body: JSON.stringify({ start: startQuery, end: endQuery, mode })
       });
       const data = await response.json();
-      if (data.route) {
-        setRouteData(data);
-      }
-    } catch (e) {
-      console.error("Search error", e);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSemanticSearch = async () => {
-    if (!endQuery) return;
-    setLoading(true);
-    try {
-      const response = await fetch(`/api/search?q=${encodeURIComponent(endQuery)}`);
-      const data = await response.json();
-      if (data.results && data.results.length > 0) {
-        const destination = data.results[0].name || "Somewhere Lazy";
-        setEndQuery(destination);
-        const start = startQuery || "My current location";
-        const res2 = await fetch("/api/route", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ start, end: destination, mode })
-        });
-        const data2 = await res2.json();
-        if (data2.route) {
-          setRouteData(data2);
-        }
-      }
-    } catch (e) {
-      console.error("Semantic search error", e);
+      if (response.ok) setRouteData(data);
+      else setError(data.error);
+    } catch {
+      setError("Failed to fetch route.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="app-container dark-americana">
-      <div className="top-ad-bar">
-        <AdBanner4x1 />
-      </div>
+    <div className="app-wrapper">
+      <div className="sidebar">
+        <header>
+          <h1>lazymap.us</h1>
+          <div className="tagline">Minimal effort navigation</div>
+        </header>
 
-      <header>
-        <h1>lazymap.us</h1>
-      </header>
-
-      <div className="search-panel glass">
-        <div className="mode-selector">
-          {["driving", "walking", "biking", "transit"].map((m) => (
-            <button
-              key={m}
-              className={mode === m ? "active" : ""}
-              onClick={() => setMode(m)}
-            >
-              {m.charAt(0).toUpperCase() + m.slice(1)}
-            </button>
-          ))}
-        </div>
-        <div className="input-group">
-          <input
-            type="text"
-            placeholder="Starting point..."
-            value={startQuery}
-            onChange={(e) => setStartQuery(e.target.value)}
-          />
-          <input
-            type="text"
-            placeholder="Where to?"
-            value={endQuery}
-            onChange={(e) => setEndQuery(e.target.value)}
-          />
-        </div>
-        <div className="button-group">
-          <button onClick={handleSearch} disabled={loading} className="main-search">
-            {loading ? "Cruising..." : "Find the Lazy Way"}
-          </button>
-          <button onClick={handleSemanticSearch} disabled={loading} className="lazy-search">
-            ✨ I'm feeling lazy
-          </button>
-        </div>
-      </div>
-
-      <div className="main-layout">
-        <div className="content-left">
-          <div className="map-wrapper glass">
-            <MapContainer center={mapCenter} zoom={4} scrollWheelZoom={true} style={{ height: "100%", width: "100%" }}>
-              <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-                url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-              />
-              <MapUpdater center={mapCenter} route={routeData?.route || []} />
-              {routeData && (
-                <>
-                  <Polyline positions={routeData.route} color="#3498db" weight={5} opacity={0.7} />
-                  <Marker position={routeData.route[0]} />
-                  <Marker position={routeData.route[routeData.route.length - 1]} />
-                  {routeData.sponsoredStops.map((stop, i) => (
-                    <Marker key={i} position={stop.position}>
-                      <Popup>
-                        <div className="sponsored-popup">
-                          <strong>{stop.name}</strong>
-                          <p>Need a lazy break?</p>
-                          <a href={stop.link} target="_blank" rel="noreferrer">Visit →</a>
-                        </div>
-                      </Popup>
-                    </Marker>
-                  ))}
-                </>
-              )}
-            </MapContainer>
+        <section className="search-section">
+          <div className="mode-tabs">
+            {["driving", "walking", "biking", "transit"].map(m => (
+              <button key={m} className={mode === m ? "active" : ""} onClick={() => setMode(m)}>
+                {m[0].toUpperCase()}
+              </button>
+            ))}
           </div>
+          <div className="inputs">
+            <input placeholder="Start..." value={startQuery} onChange={e => setStartQuery(e.target.value)} />
+            <input placeholder="Destination..." value={endQuery} onChange={e => setEndQuery(e.target.value)} />
+            <button onClick={handleSearch} disabled={loading} className="go-btn">
+              {loading ? "..." : "GO"}
+            </button>
+          </div>
+          {error && <div className="error">{error}</div>}
+        </section>
 
-          {routeData && (
-            <div className="info-panel glass">
-              <div className="stats-grid">
-                <div className="stat-card">
-                  <span className="stat-label">Lazy Score</span>
-                  <div className="meter-bar">
-                    <div className="meter-fill" style={{ width: `${routeData.lazyScore}%` }}></div>
-                  </div>
-                  <span className="stat-value">{routeData.lazyScore}%</span>
-                </div>
-                <div className="stat-card">
-                  <span className="stat-label">Turns</span>
-                  <span className="stat-value">{routeData.turnCount}</span>
-                </div>
-                <div className="stat-card">
-                  <span className="stat-label">Distance</span>
-                  <span className="stat-value">{routeData.distance} mi</span>
-                </div>
-                <div className="stat-card">
-                  <span className="stat-label">Duration</span>
-                  <span className="stat-value">{routeData.duration} min</span>
-                </div>
-              </div>
+        <AdUnit id="top-native" type="native" />
 
-              <div className="narrative">
-                <p>"{routeData.narrative}"</p>
-              </div>
-
-              <div className="lazy-ad-banner glass">
-                <p>The Ultimate Shortcut</p>
-                <a href="https://www.effectivecpmnetwork.com/xqswie92h2?key=1073ee6ec1c94b2b99bd7830cbed5778" target="_blank" rel="noreferrer">Skip the effort →</a>
-              </div>
-
-              <div className="directions-panel">
-                <h3>Lazy Directions</h3>
-                <ul className="directions-list">
-                  {routeData.directions.map((dir, i) => (
-                    <li key={i} className="direction-item">
-                      <span className="instruction">{dir.instruction}</span>
-                      {dir.name && <span className="road-name"> onto {dir.name}</span>}
-                      <span className="distance"> ({Math.round(dir.distance / 160.9) / 10} mi)</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              <AdBanner300x250 />
+        {routeData && (
+          <div className="route-details">
+            <div className="stats">
+              <div className="stat"><span>{routeData.lazyScore}%</span><label>Lazy</label></div>
+              <div className="stat"><span>{routeData.turnCount}</span><label>Turns</label></div>
+              <div className="stat"><span>{routeData.distance}m</span><label>Dist</label></div>
             </div>
-          )}
-        </div>
 
-        <div className="content-right discovery">
-          <div className="discovery-header">Discovery</div>
-          <AdBanner160x300 />
-          <div className="discovery-hint">Sponsored spots for your lazy journey.</div>
+            <div className="narrative-box">
+              {routeData.narrative}
+            </div>
+
+            <AdUnit id="mid-300" type="300" />
+
+            <div className="directions">
+              <h3>Directions</h3>
+              {routeData.directions.map((d, i) => (
+                <div key={i} className="dir-step">
+                  {d.instruction} {d.name && <strong>{d.name}</strong>}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="sidebar-footer">
+          <AdUnit id="side-160" type="160" />
         </div>
+      </div>
+
+      <div className="map-container">
+        <MapContainer center={mapCenter} zoom={4} zoomControl={false} style={{ height: "100vh", width: "100%" }}>
+          <TileLayer
+            attribution='&copy; CARTO'
+            url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+          />
+          <MapUpdater center={mapCenter} route={routeData?.route || []} />
+          {routeData && (
+            <>
+              <Polyline positions={routeData.route} color="#00d4ff" weight={4} opacity={0.8} />
+              <Marker position={routeData.route[0]} />
+              <Marker position={routeData.route[routeData.route.length - 1]} />
+              {routeData.sponsoredStops.map((stop, i) => (
+                <Marker key={i} position={stop.position}>
+                  <Popup><strong>{stop.name}</strong></Popup>
+                </Marker>
+              ))}
+            </>
+          )}
+        </MapContainer>
       </div>
 
       <div className="fireflies">
-        {[...Array(15)].map((_, i) => (
-          <div key={i} className="firefly" style={{
-            top: `${Math.random() * 100}%`,
-            left: `${Math.random() * 100}%`,
-            animationDelay: `${Math.random() * 5}s`,
-            animationDuration: `${8 + Math.random() * 10}s, ${2 + Math.random() * 3}s`
-          }}></div>
-        ))}
+        {[...Array(10)].map((_, i) => <div key={i} className="firefly"></div>)}
       </div>
     </div>
   );
