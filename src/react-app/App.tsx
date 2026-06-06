@@ -26,6 +26,10 @@ function MapUpdater({ center, route }: { center: [number, number], route: [numbe
     } else {
       map.setView(center, 4);
     }
+    // Handle container resize
+    setTimeout(() => {
+      map.invalidateSize();
+    }, 100);
   }, [center, route, map]);
   return null;
 }
@@ -55,15 +59,20 @@ interface RouteData {
   mode: string;
 }
 
+// Global flag to track loaded scripts to avoid duplicates
+const loadedScripts = new Set<string>();
+
 const AdBanner4x1 = () => {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    if (ref.current) {
+    const scriptId = "ad-script-4x1";
+    if (ref.current && !loadedScripts.has(scriptId)) {
       const script = document.createElement("script");
       script.async = true;
       script.dataset.cfasync = "false";
       script.src = "https://pl29649217.effectivecpmnetwork.com/16ec00aafb5a287a676e848be9bca123/invoke.js";
       ref.current.appendChild(script);
+      loadedScripts.add(scriptId);
     }
   }, []);
   return <div ref={ref} id="container-16ec00aafb5a287a676e848be9bca123" className="sponsored-tag"></div>;
@@ -72,20 +81,23 @@ const AdBanner4x1 = () => {
 const AdBanner160x300 = () => {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    if (ref.current) {
+    const scriptId = "ad-script-160x300";
+    if (ref.current && !loadedScripts.has(scriptId)) {
       const scriptConfig = document.createElement("script");
       scriptConfig.innerHTML = `
-        atOptions = {
+        window.atOptions160 = {
           'key' : '3307bd28ad7d8b2710e1da6b875192c1',
           'format' : 'iframe',
           'height' : 300,
           'width' : 160,
           'params' : {}
-        };`;
+        };
+        var atOptions = window.atOptions160;`;
       const scriptSrc = document.createElement("script");
       scriptSrc.src = "https://www.highperformanceformat.com/3307bd28ad7d8b2710e1da6b875192c1/invoke.js";
       ref.current.appendChild(scriptConfig);
       ref.current.appendChild(scriptSrc);
+      loadedScripts.add(scriptId);
     }
   }, []);
   return <div ref={ref} className="ad-160x300 sponsored-tag"></div>;
@@ -94,20 +106,23 @@ const AdBanner160x300 = () => {
 const AdBanner300x250 = () => {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    if (ref.current) {
+    const scriptId = "ad-script-300x250";
+    if (ref.current && !loadedScripts.has(scriptId)) {
       const scriptConfig = document.createElement("script");
       scriptConfig.innerHTML = `
-        atOptions = {
+        window.atOptions300 = {
           'key' : '8ced9507792f54b04782805656dcb8a7',
           'format' : 'iframe',
           'height' : 250,
           'width' : 300,
           'params' : {}
-        };`;
+        };
+        var atOptions = window.atOptions300;`;
       const scriptSrc = document.createElement("script");
       scriptSrc.src = "https://www.highperformanceformat.com/8ced9507792f54b04782805656dcb8a7/invoke.js";
       ref.current.appendChild(scriptConfig);
       ref.current.appendChild(scriptSrc);
+      loadedScripts.add(scriptId);
     }
   }, []);
   return <div ref={ref} className="ad-300x250 sponsored-tag"></div>;
@@ -120,18 +135,23 @@ function App() {
   const [routeData, setRouteData] = useState<RouteData | null>(null);
   const [mapCenter] = useState<[number, number]>([39.8283, -98.5795]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if ("geolocation" in navigator) {
-      navigator.geolocation.getCurrentPosition((position) => {
-        setStartQuery(`${position.coords.latitude}, ${position.coords.longitude}`);
-      });
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setStartQuery(`${position.coords.latitude}, ${position.coords.longitude}`);
+        },
+        (err) => console.warn("Geolocation denied", err)
+      );
     }
   }, []);
 
   const handleSearch = async () => {
     if (!startQuery || !endQuery) return;
     setLoading(true);
+    setError(null);
     try {
       const response = await fetch("/api/route", {
         method: "POST",
@@ -139,11 +159,14 @@ function App() {
         body: JSON.stringify({ start: startQuery, end: endQuery, mode })
       });
       const data = await response.json();
-      if (data.route) {
+      if (response.ok) {
         setRouteData(data);
+      } else {
+        setError(data.error || "Failed to find route.");
       }
     } catch (e) {
       console.error("Search error", e);
+      setError("A network error occurred. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -152,6 +175,7 @@ function App() {
   const handleSemanticSearch = async () => {
     if (!endQuery) return;
     setLoading(true);
+    setError(null);
     try {
       const response = await fetch(`/api/search?q=${encodeURIComponent(endQuery)}`);
       const data = await response.json();
@@ -165,12 +189,17 @@ function App() {
           body: JSON.stringify({ start, end: destination, mode })
         });
         const data2 = await res2.json();
-        if (data2.route) {
+        if (res2.ok) {
           setRouteData(data2);
+        } else {
+          setError(data2.error || "Failed to find lazy route.");
         }
+      } else {
+        setError("No lazy destinations found for that query.");
       }
     } catch (e) {
       console.error("Semantic search error", e);
+      setError("Semantic search failed. Try a simpler destination.");
     } finally {
       setLoading(false);
     }
@@ -220,6 +249,7 @@ function App() {
             ✨ I'm feeling lazy
           </button>
         </div>
+        {error && <div className="error-message">{error}</div>}
       </div>
 
       <div className="main-layout">

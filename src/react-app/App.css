@@ -288,3 +288,14 @@ header h1 {
   0%, 100% { opacity: 0; }
   50% { opacity: 1; }
 }
+
+.error-message {
+  color: var(--danger-color);
+  font-size: 0.9rem;
+  font-weight: bold;
+  background: rgba(238, 108, 77, 0.1);
+  padding: 10px 20px;
+  border-radius: 8px;
+  border: 1px solid var(--danger-color);
+  margin-top: 10px;
+}
