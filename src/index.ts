@@ -1,21 +1,26 @@
 import { Hono } from "hono";
 
 type Bindings = {
-	lazymap: D1Database;
-	justlazy: R2Bucket;
+	laZd1: D1Database;
+	laZr2: R2Bucket;
 	searchlazy: R2Bucket;
-	lazymapbot: Ai;
-	lazymaplookk: VectorizeIndex;
+	laZai: Ai;
+	laZains: any; // AI Search Namespace
+	laZem: any; // Email
+	laZrl: { limit: (options: { key: string }) => Promise<{ success: boolean }> };
 	lazydyn: DispatchNamespace;
-	lazylimit: { limit: (options: { key: string }) => Promise<{ success: boolean }> };
+	ENVIRONMENT: string;
+	APP_URL: string;
+	lazymedia: string;
+	lazystream: string;
 };
 
 const app = new Hono<{ Bindings: Bindings }>();
 
 // Rate limiting middleware helper
 async function checkRateLimit(c: any, key: string) {
-	if (c.env.lazylimit) {
-		const { success } = await c.env.lazylimit.limit({ key });
+	if (c.env.laZrl) {
+		const { success } = await c.env.laZrl.limit({ key });
 		if (!success) {
 			return false;
 		}
@@ -144,7 +149,7 @@ app.post("/api/route", async (c) => {
 
 	let narrative = "Just keep going, don't overthink it.";
 	try {
-		const aiResponse = await c.env.lazymapbot.run("@cf/meta/llama-3.1-8b-instruct-fp8", {
+		const aiResponse = await c.env.laZai.run("@cf/meta/llama-3.1-8b-instruct-fp8", {
 			messages: [
 				{ role: "system", content: `You are a lazy traveler who hates effort. You are currently ${mode}. Describe this route in a few short sentences. Focus on why it is the low-effort path.` },
 				{ role: "user", content: `Tell me about a ${mode} route from ${startLoc.name} to ${endLoc.name} with a lazy score of ${info.lazyScore} out of 100.` }
@@ -176,18 +181,18 @@ app.get("/api/search", async (c) => {
 	if (!query) return c.json({ results: [] });
 
 	try {
-		const embeddings = await c.env.lazymapbot.run("@cf/baai/bge-small-en-v1.5", {
-			text: [query]
-		}) as any;
-		const vector = embeddings.data[0];
+		// Using AI Search Namespace binding
+		const instance = c.env.laZains.get("lazymap");
+		const results = await instance.search({
+			messages: [{ role: "user", content: query }]
+		});
 
-		const matches = await c.env.lazymaplookk.query(vector, { topK: 5 });
-		if (matches.matches.length === 0) {
+		if (!results || !results.results || results.results.length === 0) {
 			const loc = await geocode(query);
 			return c.json({ results: loc ? [loc] : [] });
 		}
 
-		return c.json({ results: matches.matches });
+		return c.json({ results: results.results });
 	} catch (e) {
 		const loc = await geocode(query);
 		return c.json({ results: loc ? [loc] : [] });

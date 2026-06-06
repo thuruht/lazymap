@@ -1,0 +1,86 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "lazymap",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-06-06",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": true,
+  "preview_urls": true,
+  "routes": [
+    { "pattern": "lazymap.us", "custom_domain": true },
+    { "pattern": "www.lazymap.us", "custom_domain": true }
+  ],
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1
+  },
+  "assets": {
+    "directory": "./dist/client",
+    "not_found_handling": "single-page-application"
+  },
+  "limits": {
+    "cpu_ms": 50000,
+    "subrequests": 10000
+  },
+  "ai": {
+    "binding": "laZai"
+  },
+  "ai_search_namespaces": [
+    {
+      "binding": "laZains",
+      "namespace": "lazymap"
+    }
+  ],
+  "d1_databases": [
+    {
+      "binding": "laZd1",
+      "database_name": "lazymap",
+      "database_id": "lazymap"
+    }
+  ],
+  "send_email": [
+    {
+      "name": "laZem"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "laZr2",
+      "bucket_name": "lazybucket"
+    },
+    {
+      "binding": "searchlazy",
+      "bucket_name": "lazysearchbuckey"
+    }
+  ],
+  "ratelimits": [
+    {
+      "name": "laZrl",
+      "namespace_id": "52694",
+      "simple": {
+        "limit": 1000,
+        "period": 60
+      }
+    }
+  ],
+  "dispatch_namespaces": [
+    {
+      "binding": "lazydyn",
+      "namespace": "lazymap"
+    }
+  ],
+  "vars": {
+    "ENVIRONMENT": "production",
+    "APP_URL": "https://lazymap.us",
+    "lazymedia": "lazymedia",
+    "lazystream": "lazystream"
+  },
+  "unsafe": {
+    "bindings": [
+      {
+        "name": "lazyimg",
+        "type": "images"
+      }
+    ]
+  }
+}
