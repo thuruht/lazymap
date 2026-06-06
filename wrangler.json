@@ -39,8 +39,7 @@
 	],
 	"dispatch_namespaces": [
 		{
-			"binding": "lazydyn",
-			"namespace": "lazymap"
+			"binding": "lazydyn", "namespace": "lazymap"
 		}
 	],
 	"send_email": [
@@ -58,10 +57,14 @@
 				"name": "lazylimit",
 				"type": "ratelimit",
 				"namespace_id": "66669",
-				"simple": {
+				"limit": {
 					"requests": 100,
-					"window": 60
+					"window": "60s"
 				}
+			},
+			{
+				"name": "lazyimg",
+				"type": "images"
 			}
 		]
 	}
