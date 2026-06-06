@@ -60,12 +60,8 @@
 				"namespace_id": "66669",
 				"simple": {
 					"requests": 100,
-					"window": "60s"
+					"window": 60
 				}
-			},
-			{
-				"name": "lazyimg",
-				"type": "images"
 			}
 		]
 	}
