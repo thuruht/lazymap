@@ -43,12 +43,6 @@
       "name": "laZem"
     }
   ],
-  "kv_namespaces": [
-    {
-      "binding": "laZkv",
-      "id": "lazykv"
-    }
-  ],
   "r2_buckets": [
     {
       "binding": "laZr2",

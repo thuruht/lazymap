@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { MapContainer, TileLayer, Marker, useMap, Polyline, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
@@ -55,45 +55,6 @@ interface RouteData {
   narrative: string;
   mode: string;
 }
-
-const AdUnit = ({ type }: { id: string, type: 'native' | '160' | '300' }) => {
-  const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (!ref.current) return;
-    const container = ref.current;
-
-    if (type === 'native') {
-      const script = document.createElement("script");
-      script.async = true;
-      script.dataset.cfasync = "false";
-      script.src = "https://pl29649217.effectivecpmnetwork.com/16ec00aafb5a287a676e848be9bca123/invoke.js";
-      container.appendChild(script);
-    } else {
-      const scriptConfig = document.createElement("script");
-      const key = type === '160' ? '3307bd28ad7d8b2710e1da6b875192c1' : '8ced9507792f54b04782805656dcb8a7';
-      const height = type === '160' ? 300 : 250;
-      const width = type === '160' ? 160 : 300;
-
-      scriptConfig.innerHTML = `
-        atOptions = {
-          'key' : '${key}',
-          'format' : 'iframe',
-          'height' : ${height},
-          'width' : ${width},
-          'params' : {}
-        };`;
-      const scriptSrc = document.createElement("script");
-      scriptSrc.src = `https://www.highperformanceformat.com/${key}/invoke.js`;
-      container.appendChild(scriptConfig);
-      container.appendChild(scriptSrc);
-    }
-  }, [type]);
-
-  if (type === 'native') {
-    return <div ref={ref} id="container-16ec00aafb5a287a676e848be9bca123" className="ad-container native"></div>;
-  }
-  return <div ref={ref} className={`ad-container ad-${type}`}></div>;
-};
 
 function App() {
   const [startQuery, setStartQuery] = useState("");
@@ -161,8 +122,6 @@ function App() {
           {error && <div className="error">{error}</div>}
         </section>
 
-        <AdUnit id="top-native" type="native" />
-
         {routeData && (
           <div className="route-details">
             <div className="stats">
@@ -175,8 +134,6 @@ function App() {
               {routeData.narrative}
             </div>
 
-            <AdUnit id="mid-300" type="300" />
-
             <div className="directions">
               <h3>Directions</h3>
               {routeData.directions.map((d, i) => (
@@ -187,10 +144,6 @@ function App() {
             </div>
           </div>
         )}
-
-        <div className="sidebar-footer">
-          <AdUnit id="side-160" type="160" />
-        </div>
       </div>
 
       <div className="map-container">

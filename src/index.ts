@@ -6,7 +6,6 @@ type Bindings = {
 	searchlazy: R2Bucket;
 	laZai: Ai;
 	laZains: any; // AI Search Namespace
-	laZkv: KVNamespace;
 	laZem: any; // Email
 	laZrl: { limit: (options: { key: string }) => Promise<{ success: boolean }> };
 	lazydyn: DispatchNamespace;

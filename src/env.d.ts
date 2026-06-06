@@ -4,7 +4,6 @@ interface Env {
 	searchlazy: R2Bucket;
 	laZai: Ai;
 	laZains: any;
-	laZkv: KVNamespace;
 	laZrl: { limit: (options: { key: string }) => Promise<{ success: boolean }> };
 	laZem: any;
 	lazydyn: DispatchNamespace;
