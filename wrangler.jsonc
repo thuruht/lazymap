@@ -25,12 +25,6 @@
   "ai": {
     "binding": "laZai"
   },
-  "ai_search_namespaces": [
-    {
-      "binding": "laZains",
-      "namespace": "lazymap"
-    }
-  ],
   "d1_databases": [
     {
       "binding": "laZd1",
@@ -59,16 +53,6 @@
       "bucket_name": "lazysearchbuckey"
     }
   ],
-  "rate_limiters": [
-    {
-      "binding": "laZrl",
-      "namespace_id": "52694",
-      "simple": {
-        "limit": 1000,
-        "period": 60
-      }
-    }
-  ],
   "dispatch_namespaces": [
     {
       "binding": "lazydyn",
@@ -83,6 +67,20 @@
   },
   "unsafe": {
     "bindings": [
+      {
+        "name": "laZrl",
+        "type": "ratelimit",
+        "namespace_id": "52694",
+        "limit": {
+          "requests": 1000,
+          "window": "60s"
+        }
+      },
+      {
+        "name": "laZains",
+        "type": "ai_search",
+        "namespace": "lazymap"
+      },
       {
         "name": "lazyimg",
         "type": "images"
