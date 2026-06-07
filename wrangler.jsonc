@@ -33,9 +33,10 @@
   ],
   "d1_databases": [
     {
-      "binding": "DB",
+    
+      "binding": "laZd1",
       "database_name": "lazymap",
-      "database_id": "a94f58b2-c9a1-4c70-bad3-a517629d7ae3"
+      "database_id": "lazymap"
     }
   ],
   "send_email": [
@@ -63,6 +64,7 @@
       }
     }
   ],
+
   "vars": {
     "ENVIRONMENT": "production",
     "APP_URL": "https://lazymap.us",
