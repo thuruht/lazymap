@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 
 type Bindings = {
+	DB: D1Database;
 	laZd1: D1Database;
 	laZr2: R2Bucket;
 	searchlazy: R2Bucket;
@@ -8,7 +9,6 @@ type Bindings = {
 	laZains: any; // AI Search Namespace
 	laZem: any; // Email
 	laZrl: { limit: (options: { key: string }) => Promise<{ success: boolean }> };
-	lazydyn: DispatchNamespace;
 	ENVIRONMENT: string;
 	APP_URL: string;
 	lazymedia: string;
