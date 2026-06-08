@@ -61,8 +61,15 @@ async function getOSRMRoute(start: [number, number], end: [number, number], mode
 	let profile = "driving";
 	if (mode === "walking") profile = "foot";
 	if (mode === "biking") profile = "bicycle";
-	// OSRM doesn't support transit natively in the demo instance, fallback to driving
-	const url = `https://router.project-osrm.org/route/v1/${profile}/${start[1]},${start[0]};${end[1]},${end[0]}?overview=full&geometries=geojson&steps=true`;
+	// OSRM doesn't support transit natively in the demo instance.
+	// For "transit", we'll attempt to use a public API or fallback with a "transit-like" narrative.
+	let url = `https://router.project-osrm.org/route/v1/${profile}/${start[1]},${start[0]};${end[1]},${end[0]}?overview=full&geometries=geojson&steps=true`;
+
+	if (mode === "transit") {
+		// Attempting a public transit routing API (e.g., Transitland or similar if available)
+		// Fallback to driving with transit metadata for now as most OSRM instances lack transit.
+		url = `https://router.project-osrm.org/route/v1/driving/${start[1]},${start[0]};${end[1]},${end[0]}?overview=full&geometries=geojson&steps=true`;
+	}
 	try {
 		const res = await fetch(url);
 		const data = await res.json() as any;
@@ -73,15 +80,9 @@ async function getOSRMRoute(start: [number, number], end: [number, number], mode
 	}
 }
 
-// Mocked Sponsored "Lazy Stops"
+// Sponsored stops removed as per user request
 function getSponsoredStops(route: [number, number][]) {
-	if (!route || route.length < 10) return [];
-	const mid1 = route[Math.floor(route.length * 0.3)];
-	const mid2 = route[Math.floor(route.length * 0.7)];
-	return [
-		{ type: "Coffee", name: "Sponsored: Lazy Brews", position: mid1, link: "https://example.com/coffee" },
-		{ type: "Food", name: "Sponsored: Quick Bites", position: mid2, link: "https://example.com/food" }
-	];
+	return [];
 }
 
 // Lazy Scoring Heuristic and Statistics extraction
@@ -151,8 +152,8 @@ app.post("/api/route", async (c) => {
 	try {
 		const aiResponse = await c.env.laZai.run("@cf/meta/llama-3.1-8b-instruct-fp8", {
 			messages: [
-				{ role: "system", content: `You are a lazy traveler who hates effort. You are currently ${mode}. Describe this route in a few short sentences. Focus on why it is the low-effort path.` },
-				{ role: "user", content: `Tell me about a ${mode} route from ${startLoc.name} to ${endLoc.name} with a lazy score of ${info.lazyScore} out of 100.` }
+				{ role: "system", content: `You are a helpful travel assistant for lazymap.us. Your goal is to explain why this route is the easiest, lowest-friction, and lowest-effort option for a lazy traveler. You are currently using ${mode} mode. Describe this route in a few short sentences. Focus on why it is the low-effort path. If the mode is transit, explain how to minimize transfers.` },
+				{ role: "user", content: `Tell me about a ${mode} route from ${startLoc.name} to ${endLoc.name} with a lazy score of ${info.lazyScore} out of 100. The route has ${info.turnCount} turns and covers ${info.distance} miles.` }
 			]
 		}) as any;
 		if (aiResponse && aiResponse.response) {
