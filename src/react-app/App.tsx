@@ -121,6 +121,11 @@ function App() {
           </div>
           {error && <div className="error">{error}</div>}
         </section>
+        <div id="ad-container" className="ad-container">
+          <div className="ad-native" id="adsterra-ads">
+            {/* Adsterra script will be injected here */}
+          </div>
+        </div>
 
         <div className="ad-wrapper">
           <div id="container-16ec00aafb5a287a676e848be9bca123"></div>
@@ -155,8 +160,8 @@ function App() {
       <div className="map-container">
         <MapContainer center={mapCenter} zoom={4} zoomControl={false} style={{ height: "100vh", width: "100%" }}>
           <TileLayer
-            attribution='&copy; CARTO'
-            url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+            attribution='&copy; OpenStreetMap contributors'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
           <MapUpdater center={mapCenter} route={routeData?.route || []} />
           {routeData && (
