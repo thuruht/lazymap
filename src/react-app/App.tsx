@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { MapContainer, TileLayer, Marker, useMap, Polyline, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
@@ -108,7 +108,7 @@ function App() {
           <div className="mode-tabs">
             {["driving", "walking", "biking", "transit"].map(m => (
               <button key={m} className={mode === m ? "active" : ""} onClick={() => setMode(m)}>
-                {m[0].toUpperCase()}
+                {m.charAt(0).toUpperCase() + m.slice(1)}
               </button>
             ))}
           </div>
@@ -122,10 +122,15 @@ function App() {
           {error && <div className="error">{error}</div>}
         </section>
 
+        <div className="ad-wrapper">
+          <div id="container-16ec00aafb5a287a676e848be9bca123"></div>
+        </div>
+
+
         {routeData && (
           <div className="route-details">
             <div className="stats">
-              <div className="stat"><span>{routeData.lazyScore}%</span><label>Lazy</label></div>
+              <div className="stat"><span title="Lazy Score rewards long straightaways and penalizes frequent turns.">{routeData.lazyScore}%</span><label>Lazy ⓘ</label></div>
               <div className="stat"><span>{routeData.turnCount}</span><label>Turns</label></div>
               <div className="stat"><span>{routeData.distance}m</span><label>Dist</label></div>
             </div>
@@ -138,7 +143,8 @@ function App() {
               <h3>Directions</h3>
               {routeData.directions.map((d, i) => (
                 <div key={i} className="dir-step">
-                  {d.instruction} {d.name && <strong>{d.name}</strong>}
+                  <div className="dir-instruction">{d.instruction} {d.name && <strong>{d.name}</strong>}</div>
+                  <div className="dir-distance">{Math.round(d.distance * 0.000621371 * 100) / 100} miles</div>
                 </div>
               ))}
             </div>
@@ -169,7 +175,18 @@ function App() {
       </div>
 
       <div className="fireflies">
-        {[...Array(10)].map((_, i) => <div key={i} className="firefly"></div>)}
+        {useMemo(() => [...Array(20)].map((_, i) => (
+          <div
+            key={i}
+            className="firefly"
+            style={{
+              top: `${Math.random() * 100}%`,
+              left: `${Math.random() * 100}%`,
+              animationDelay: `${Math.random() * 5}s`,
+              animationDuration: `${5 + Math.random() * 10}s`
+            }}
+          ></div>
+        )), [])}
       </div>
     </div>
   );
