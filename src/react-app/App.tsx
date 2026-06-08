@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { MapContainer, TileLayer, Marker, useMap, Polyline, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
@@ -127,6 +127,11 @@ function App() {
           </div>
         </div>
 
+        <div className="ad-wrapper">
+          <div id="container-16ec00aafb5a287a676e848be9bca123"></div>
+        </div>
+
+
         {routeData && (
           <div className="route-details">
             <div className="stats">
@@ -175,7 +180,7 @@ function App() {
       </div>
 
       <div className="fireflies">
-        {[...Array(20)].map((_, i) => (
+        {useMemo(() => [...Array(20)].map((_, i) => (
           <div
             key={i}
             className="firefly"
@@ -186,7 +191,7 @@ function App() {
               animationDuration: `${5 + Math.random() * 10}s`
             }}
           ></div>
-        ))}
+        )), [])}
       </div>
     </div>
   );

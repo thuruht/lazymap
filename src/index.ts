@@ -66,8 +66,8 @@ async function getOSRMRoute(start: [number, number], end: [number, number], mode
 	let url = `https://router.project-osrm.org/route/v1/${profile}/${start[1]},${start[0]};${end[1]},${end[0]}?overview=full&geometries=geojson&steps=true`;
 
 	if (mode === "transit") {
-		// Attempting a public transit routing API (e.g., Transitland or similar if available)
-		// Fallback to driving with transit metadata for now as most OSRM instances lack transit.
+		// OSRM doesn't support transit. We provide a driving route as a placeholder
+		// and the AI will explain how to approach this as a low-effort transit journey.
 		url = `https://router.project-osrm.org/route/v1/driving/${start[1]},${start[0]};${end[1]},${end[0]}?overview=full&geometries=geojson&steps=true`;
 	}
 	try {
